@@ -4,9 +4,20 @@ import Form from "./components/Form";
 import "./App.css";
 
 function App() {
+  const [users, setUsers] = useState([]);
+
+  const addUser = (user) => {
+    setUsers([...users, user]);
+  };
   return (
     <>
-      <Form />
+      <h4>Users</h4>
+      <ul>
+        {users.map((user, index) => {
+          <li key={index}>{user.email}</li>;
+        })}
+      </ul>
+      <Form addUser={addUser} />
     </>
   );
 }

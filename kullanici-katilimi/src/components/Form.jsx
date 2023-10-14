@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import * as yup from "yup";
+import axios from "axios";
 
 let schema = yup.object().shape({
   name: yup
@@ -68,6 +69,10 @@ const Form = (props) => {
     });
   };
 
+  useEffect(() => {
+    kontrolFonksiyonuButunForm(formData);
+  }, [formData]);
+
   const changeHandler = (event) => {
     const { name, value, type, checked } = event.target;
 
@@ -78,13 +83,23 @@ const Form = (props) => {
     };
 
     setFormData(newState);
-    kontrolFonksiyonuButunForm(newState);
     kontrolFonksiyonuAlanlar(name, newValue);
   };
 
   const submitHandler = (event) => {
     event.preventDefault();
     console.log("submitted", event);
+    if (isDisabled === false) {
+      axios
+        .post("https://regres.in/api/users", formData)
+        .then(function (response) {
+          console.log(response);
+          props.addUser(response.data);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    }
   };
 
   return (
@@ -97,6 +112,7 @@ const Form = (props) => {
           type="text"
           name="name"
         />
+        {formErrors.name && <p className="error">{formErrors.name}</p>}
       </div>
       <div>
         <label htmlFor="email">Email:</label>
@@ -106,6 +122,7 @@ const Form = (props) => {
           type="text"
           name="email"
         />
+        {formErrors.email && <p className="error">{formErrors.email}</p>}
       </div>
       <div>
         <label htmlFor="pass">Şifre:</label>
@@ -115,15 +132,17 @@ const Form = (props) => {
           type="text"
           name="pass"
         />
+        {formErrors.pass && <p className="error">{formErrors.pass}</p>}
       </div>
       <div>
         <label htmlFor="terms">Koşullar:</label>
         <input
-          value={formData.pass}
+          value={formData.terms}
           onChange={changeHandler}
           type="checkbox"
           name="terms"
         />
+        {formErrors.terms && <p className="error">{formErrors.terms}</p>}
       </div>
       <button disabled={isDisabled} type="submit">
         Gönder
