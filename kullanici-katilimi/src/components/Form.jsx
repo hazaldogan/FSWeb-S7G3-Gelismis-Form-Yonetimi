@@ -2,10 +2,21 @@ import { useState } from "react";
 import * as yup from "yup";
 
 let schema = yup.object().shape({
-  name: yup.string().required(),
-  email: yup.string().email(),
-  pass: yup.string().required(),
-  terms: yup.boolean().oneOf([true]),
+  name: yup
+    .string()
+    .required("ismini göremedim")
+    .min(3, "En az 3 karakter giriniz"),
+  email: yup
+    .string()
+    .email("Eposta adresinde bir hata olabilir mi?")
+    .required("Email zorunlu")
+    .notOneOf(["waffle@syrup.com"], "Bu email adresi kullanılıyor"),
+  pass: yup
+    .string()
+    .required("Şifre zorunlu")
+    .min(6, "Şifreniz en az 6 karakter olmalı")
+    .matches(/[^0-9]/, "Şifre sadece sayı olamaz harf falan ekle"),
+  terms: yup.boolean().oneOf([true], "Kullanım koşullarını kabul etmelisiniz"),
 });
 
 const Form = (props) => {
@@ -18,8 +29,31 @@ const Form = (props) => {
 
   const [formData, setFormData] = useState(initialForm);
   const [isDisabled, setIsDisabled] = useState(true);
+  const [formErrors, setFormErrors] = useState({});
 
-  const kontrolFonksiyonu = (formVerileri) => {
+  const kontrolFonksiyonuAlanlar = (name, value) => {
+    yup
+      .reach(schema, name)
+      .validate(value)
+      .then((valid) => {
+        const newErrorState = {
+          ...formErrors,
+          [name]: "",
+        };
+        setFormErrors(newErrorState);
+      })
+      .catch(function (err) {
+        err.errors;
+        console.log("error", err.name, err.errors[0]);
+        const newErrorState = {
+          ...formErrors,
+          [name]: err.errors[0],
+        };
+        setFormErrors(newErrorState);
+      });
+  };
+
+  const kontrolFonksiyonuButunForm = (formVerileri) => {
     // check validity
     schema.isValid(formVerileri).then(function (valid) {
       console.log(valid, "valid");
@@ -29,7 +63,6 @@ const Form = (props) => {
         );
         setIsDisabled(false);
       } else {
-        console.log("hataMesajıGörüntüle");
         setIsDisabled(true);
       }
     });
@@ -45,8 +78,8 @@ const Form = (props) => {
     };
 
     setFormData(newState);
-
-    kontrolFonksiyonu(newState);
+    kontrolFonksiyonuButunForm(newState);
+    kontrolFonksiyonuAlanlar(name, newValue);
   };
 
   const submitHandler = (event) => {
@@ -84,7 +117,7 @@ const Form = (props) => {
         />
       </div>
       <div>
-        <label htmlFor="terms">Şifre:</label>
+        <label htmlFor="terms">Koşullar:</label>
         <input
           value={formData.pass}
           onChange={changeHandler}
