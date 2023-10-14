@@ -1,4 +1,12 @@
 import { useState } from "react";
+import * as yup from "yup";
+
+let schema = yup.object().shape({
+  name: yup.string().required(),
+  email: yup.string().email(),
+  pass: yup.string().required(),
+  terms: yup.boolean().oneOf([true]),
+});
 
 const Form = (props) => {
   const initialForm = {
@@ -9,6 +17,23 @@ const Form = (props) => {
   };
 
   const [formData, setFormData] = useState(initialForm);
+  const [isDisabled, setIsDisabled] = useState(true);
+
+  const kontrolFonksiyonu = (formVerileri) => {
+    // check validity
+    schema.isValid(formVerileri).then(function (valid) {
+      console.log(valid, "valid");
+      if (valid === true) {
+        console.log(
+          "Axios ile sunucuya gönderilebilir buton aktif edilebilir."
+        );
+        setIsDisabled(false);
+      } else {
+        console.log("hataMesajıGörüntüle");
+        setIsDisabled(true);
+      }
+    });
+  };
 
   const changeHandler = (event) => {
     const { name, value, type, checked } = event.target;
@@ -20,9 +45,12 @@ const Form = (props) => {
     };
 
     setFormData(newState);
+
+    kontrolFonksiyonu(newState);
   };
 
   const submitHandler = (event) => {
+    event.preventDefault();
     console.log("submitted", event);
   };
 
@@ -64,7 +92,9 @@ const Form = (props) => {
           name="terms"
         />
       </div>
-      <button type="submit">Gönder</button>
+      <button disabled={isDisabled} type="submit">
+        Gönder
+      </button>
     </form>
   );
 };
